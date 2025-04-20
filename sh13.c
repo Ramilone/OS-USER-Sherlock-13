@@ -350,7 +350,8 @@ int main(int argc, char ** argv){
 					printf("Symbole: %d\n", symbole);
 					printf("Occurence du symbole récupérée: %d\n", value);
 					// On met à jour la tableCartes du joueur
-					tableCartes[joueurCourant][symbole] = value;  
+					tableCartes[joueurCourant][symbole] = value; 
+					printf("%d %d\n", tableCartes[joueurCourant][symbole], value);  
 					break;
 			}
 			synchro=0;
@@ -440,7 +441,7 @@ int main(int argc, char ** argv){
 						sprintf(mess,"*");
 					}
 					else{
-						printf(mess,"%d",tableCartes[i][j]);
+						sprintf(mess,"%d",tableCartes[i][j]);
 					}
             	    SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, mess, col1);
             	    SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
