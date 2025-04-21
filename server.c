@@ -21,7 +21,7 @@ client_t tcpClients[4];
 int eliminatedClient[4] = {-1,-1,-1,-1}; 		// Stocke l'id des clients éliminé (initialisation à -1)
 int eliminated_counter = 0; 					// Stocke la quantité de joueurs éliminés 
 
-int nbClients;
+int nbClients = 0;
 
 /**
  * - 0: la partie est en cours de création mais il manque encore des joueurs.
@@ -320,7 +320,7 @@ int main(int argc, char *argv[]){
 						printf("Tout les clients sont connectés\n");
 						// On distribue au joueur 0 les cartes d'indice 0,1,2
 						sprintf(reply, "D %d %d %d", deck[0], deck[1], deck[2]); 
-						sendMessageToClient(tcpClients[0].ipAddress, tcpClients[0].port, reply); 
+						sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply); 
 						// On informe le joueur de sa ligne (Row) dans la grille
 						/**
 						 * On lui envoie 3 information: 
@@ -329,47 +329,56 @@ int main(int argc, char *argv[]){
 						 * - la valeur dans la case.
 						 * De cette manière, on envoie les informations suffisantes au client pour qu'il puisse compléter la grille de son côté
 						 */
-						printf("on envoie ces cartes au joueur 0\n"); 
+						printf("on envoie ses cartes au joueur 0\n"); 
 						for(int i=0; i<8; i++){
-							sprintf(reply, "V 0 %d %d", i, tableCartes[0][i]);
-							sendMessageToClient(tcpClients[0].ipAddress, tcpClients[0].port, reply);  
+							sprintf(reply, "V %d %d %d", joueurCourant, i, tableCartes[joueurCourant][i]);
+							sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply);  
 						}
+						joueurCourant++; 
 
 						// On distribue au joueur 1 les cartes d'indice 3,4,5
 						sprintf(reply, "D %d %d %d", deck[3], deck[4], deck[5]); 
-						sendMessageToClient(tcpClients[1].ipAddress, tcpClients[1].port, reply);
+						sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply);
 						// On informe le joueur de sa ligne (Row) dans la grille
+						printf("on envoie ses cartes au joueur 1\n");
 						for(int i=0; i<8; i++){
-							sprintf(reply, "V 1 %d %d", i, tableCartes[1][i]);
-							sendMessageToClient(tcpClients[1].ipAddress, tcpClients[1].port, reply); 
+							sprintf(reply, "V %d %d %d", joueurCourant, i, tableCartes[joueurCourant][i]);
+							sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply); 
 						} 
+						joueurCourant++; 
 
 						// On distribue au joueur 2 les cartes d'indice 6,7,8
 						sprintf(reply, "D %d %d %d", deck[6], deck[7], deck[8]); 
-						sendMessageToClient(tcpClients[2].ipAddress, tcpClients[2].port, reply);
+						sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply);
 						// On informe le joueur de sa ligne (Row) dans la grille
+						printf("on envoie ses cartes au joueur 2\n");
 						for(int i=0; i<8; i++){
-							sprintf(reply, "V 2 %d %d", i, tableCartes[2][i]);
-							sendMessageToClient(tcpClients[2].ipAddress, tcpClients[2].port, reply); 
+							sprintf(reply, "V %d %d %d", joueurCourant, i, tableCartes[joueurCourant][i]);
+							sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply); 
 						}
+						joueurCourant++; 
 
 						// On distribue au joueur 3 les cartes d'indice 9,10,11
 						sprintf(reply, "D %d %d %d", deck[9], deck[10], deck[11]); 
-						sendMessageToClient(tcpClients[3].ipAddress, tcpClients[3].port, reply);
+						sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply);
 						// On informe le joueur de sa ligne (Row) dans la grille
+						printf("on envoie ses cartes au joueur 3\n");
 						for(int i=0; i<8; i++){
-							sprintf(reply, "V 3 %d %d", i, tableCartes[3][i]);
-							sendMessageToClient(tcpClients[3].ipAddress, tcpClients[3].port, reply); 
+							sprintf(reply, "V %d %d %d", joueurCourant, i, tableCartes[joueurCourant][i]);
+							sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply); 
 						}  
+						joueurCourant = 0; 
 
 						// // On envoie un message à tout les joueurs (broadcast) pour leur donner la liste des joueurs ainsi que leur ordre de passage
 						// sprintf(reply, "L %s %s %s %s", tcpClients[0].name, tcpClients[1].name, tcpClients[2].name, tcpClients[3].name); 
 						// broadcastMessage(reply); 
 						// Enfin, on envoie un message à tout les joueurs pour leur donner le premier joueur
+						printf("On annonce le premier joueur.\n"); 
 						sprintf(reply, "M %d", joueurCourant);
 						broadcastMessage(reply); 
 
 						// La partie peut alors commencer, on modifie fsmServer en conséquent
+						printf("La partie peut maintenant commencer.\n"); 
                         fsmServer=1;
 					}
 					break;
@@ -417,7 +426,7 @@ int main(int argc, char *argv[]){
 					}
 					break;
 
-    	        case 'S': // Un joueur demande à tout les autres s'ils posssèdent un symbole
+    	        case 'O': // Un joueur demande à tout les autres s'ils posssèdent un symbole
 					// On récupère la requête du client et le symbole souhaité
 					sscanf(buffer, "S %d", &symbole); 
 					// On regarde sur la grille les joueurs possédant ce symbole
@@ -437,12 +446,15 @@ int main(int argc, char *argv[]){
 					sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply); 
 					break;
 
-				case 'N': // Un joueur demande à un autre combien d'occurence d'un même symbole il possède 
+				case 'S': // Un joueur demande à un autre combien d'occurence d'un même symbole il possède 
 					int target = -1; 
 					// On récupère la requête du client, le symbole souhaité et le joueur ciblé
 					sscanf(buffer, "S %d %d", &target, &symbole);
 					// On peut mettre à jour counterSymbole
 					counterSymbole = tableCartes[target][symbole]; 
+					// On envoie au client les données pour remplir le tableau
+					sprintf(reply, "V %d %d %d", target, symbole, counterSymbole); 
+					sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply);
 					// On envoie au joueur la réponse
 					sprintf(reply, "R %d", counterSymbole); 
 					sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply);
