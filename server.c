@@ -5,9 +5,9 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
-
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 typedef struct _client{
     char ipAddress[40];
@@ -219,6 +219,9 @@ void broadcastMessage(char *mess){
 
 
 int main(int argc, char *argv[]){
+
+	srand(time(NULL)); 
+
     int sockfd, newsockfd, portno;
     socklen_t clilen;
     char buffer[256];
@@ -443,21 +446,22 @@ int main(int argc, char *argv[]){
 					else{
 						sprintf(reply, "R 0 0"); 
 					}
-					sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply); 
+					broadcastMessage(reply);  
 					break;
 
 				case 'S': // Un joueur demande à un autre combien d'occurence d'un même symbole il possède 
 					int target = -1; 
+					int joueur = -1; 
 					// On récupère la requête du client, le symbole souhaité et le joueur ciblé
-					sscanf(buffer, "S %d %d", &target, &symbole);
+					sscanf(buffer, "S %d %d %d", &joueur, &target, &symbole);
 					// On peut mettre à jour counterSymbole
 					counterSymbole = tableCartes[target][symbole]; 
 					// On envoie au client les données pour remplir le tableau
 					sprintf(reply, "V %d %d %d", target, symbole, counterSymbole); 
-					sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply);
+					broadcastMessage(reply); 
 					// On envoie au joueur la réponse
 					sprintf(reply, "R %d", counterSymbole); 
-					sendMessageToClient(tcpClients[joueurCourant].ipAddress, tcpClients[joueurCourant].port, reply);
+					broadcastMessage(reply); 
 					break;
 
     	        default:
